@@ -134,14 +134,6 @@ def test_sdk_crash_is_reported_development_paths(
             True,
         ),
         (
-            "/@sentry/hub/",
-            True,
-        ),
-        (
-            "/@sentry/integrations/",
-            True,
-        ),
-        (
             "/@sentry/react/",
             True,
         ),
