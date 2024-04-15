@@ -47,6 +47,7 @@ class EscalatingGroupForecast:
             self.build_storage_identifier(self.project_id, self.group_id),
             self.to_dict(),
             ttl=timedelta(GROUP_FORECAST_TTL),
+            override_cache=True,
         )
 
     @classmethod
