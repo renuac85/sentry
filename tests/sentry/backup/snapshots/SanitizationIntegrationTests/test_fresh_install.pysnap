@@ -1,5 +1,5 @@
 ---
-created: '2024-04-17T17:43:34.680028+00:00'
+created: '2024-04-17T17:44:23.407067+00:00'
 creator: sentry
 source: tests/sentry/backup/test_sanitize.py
 ---
@@ -152,6 +152,9 @@ source: tests/sentry/backup/test_sanitize.py
 - model_name: sentry.apiapplication
   ordinal: 1
   sanitized_fields:
+  - allowed_origins
+  - client_id
   - client_secret
   - date_added
   - name
+  - redirect_uris
