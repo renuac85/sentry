@@ -14,8 +14,9 @@ from django.db.models import Q, QuerySet
 from django.db.models.signals import post_delete, post_save
 from django.utils import timezone
 
-from sentry.backup.dependencies import PrimaryKeyMap
+from sentry.backup.dependencies import NormalizedModelName, PrimaryKeyMap, get_model_name
 from sentry.backup.helpers import ImportFlags
+from sentry.backup.sanitize import SanitizableField, Sanitizer
 from sentry.backup.scopes import ImportScope, RelocationScope
 from sentry.constants import ObjectStatus
 from sentry.db.models import (
@@ -40,6 +41,7 @@ from sentry.services.hybrid_cloud.user.service import user_service
 from sentry.snuba.models import QuerySubscription
 from sentry.snuba.subscriptions import bulk_create_snuba_subscriptions, delete_snuba_subscription
 from sentry.utils import metrics
+from sentry.utils.json import JSONData
 
 logger = logging.getLogger(__name__)
 
@@ -438,6 +440,14 @@ class AlertRuleTrigger(Model):
         db_table = "sentry_alertruletrigger"
         unique_together = (("alert_rule", "label"),)
 
+    @classmethod
+    def sanitize_relocation_json(
+        cls, json: JSONData, sanitizer: Sanitizer, model_name: NormalizedModelName | None = None
+    ) -> None:
+        model_name = get_model_name(cls) if model_name is None else model_name
+        sanitizer.set_string(json, SanitizableField(model_name, "label"))
+        return super().sanitize_relocation_json(json, sanitizer, model_name)
+
 
 @region_silo_only_model
 class AlertRuleTriggerExclusion(Model):
@@ -579,6 +589,14 @@ class AlertRuleTriggerAction(AbstractNotificationAction):
     @classmethod
     def get_registered_types(cls):
         return list(cls._type_registrations.values())
+
+    @classmethod
+    def sanitize_relocation_json(
+        cls, json: JSONData, sanitizer: Sanitizer, model_name: NormalizedModelName | None = None
+    ) -> None:
+        model_name = get_model_name(cls) if model_name is None else model_name
+        sanitizer.set_json(json, SanitizableField(model_name, "sentry_app_config"), {})
+        return super().sanitize_relocation_json(json, sanitizer, model_name)
 
 
 class AlertRuleActivityType(Enum):

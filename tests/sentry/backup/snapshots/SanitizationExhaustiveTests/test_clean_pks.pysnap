@@ -1,5 +1,5 @@
 ---
-created: '2024-04-17T17:18:49.227604+00:00'
+created: '2024-04-17T22:19:05.200418+00:00'
 creator: sentry
 source: tests/sentry/backup/test_sanitize.py
 ---
@@ -73,21 +73,29 @@ source: tests/sentry/backup/test_sanitize.py
   ordinal: 1
   sanitized_fields:
   - date_added
+  - label
+  - public_key
   - secret_key
 - model_name: sentry.projectkey
   ordinal: 2
   sanitized_fields:
   - date_added
+  - label
+  - public_key
   - secret_key
 - model_name: sentry.projectkey
   ordinal: 3
   sanitized_fields:
   - date_added
+  - label
+  - public_key
   - secret_key
 - model_name: sentry.projectkey
   ordinal: 4
   sanitized_fields:
   - date_added
+  - label
+  - public_key
   - secret_key
 - model_name: sentry.projectoption
   ordinal: 1
@@ -134,6 +142,7 @@ source: tests/sentry/backup/test_sanitize.py
   ordinal: 1
   sanitized_fields:
   - date_added
+  - redirect_slug
 - model_name: sentry.relay
   ordinal: 1
   sanitized_fields:
@@ -251,11 +260,14 @@ source: tests/sentry/backup/test_sanitize.py
   sanitized_fields:
   - date_added
   - name
+  - query
 - model_name: sentry.recentsearch
   ordinal: 1
   sanitized_fields:
   - date_added
   - last_seen
+  - query
+  - query_hash
 - model_name: sentry.projectteam
   ordinal: 1
   sanitized_fields: []
@@ -277,16 +289,19 @@ source: tests/sentry/backup/test_sanitize.py
   ordinal: 1
   sanitized_fields:
   - date_added
+  - user_email
 - model_name: sentry.organizationmember
   ordinal: 2
   sanitized_fields:
   - date_added
+  - user_email
 - model_name: sentry.organizationaccessrequest
   ordinal: 1
   sanitized_fields: []
 - model_name: sentry.monitor
   ordinal: 1
   sanitized_fields:
+  - config
   - date_added
   - guid
   - name
@@ -330,16 +345,21 @@ source: tests/sentry/backup/test_sanitize.py
   ordinal: 1
   sanitized_fields:
   - date_added
+  - slug
 - model_name: sentry.dashboard
   ordinal: 1
   sanitized_fields:
   - date_added
   - last_visited
+  - title
 - model_name: sentry.customdynamicsamplingrule
   ordinal: 1
   sanitized_fields:
+  - condition
+  - condition_hash
   - date_added
   - end_date
+  - query
   - start_date
 - model_name: sentry.counter
   ordinal: 1
@@ -423,15 +443,24 @@ source: tests/sentry/backup/test_sanitize.py
 - model_name: sentry.snubaquery
   ordinal: 1
   sanitized_fields:
+  - aggregate
+  - dataset
   - date_added
+  - query
 - model_name: sentry.snubaquery
   ordinal: 2
   sanitized_fields:
+  - aggregate
+  - dataset
   - date_added
+  - query
 - model_name: sentry.snubaquery
   ordinal: 3
   sanitized_fields:
+  - aggregate
+  - dataset
   - date_added
+  - query
 - model_name: sentry.sentryapp
   ordinal: 1
   sanitized_fields:
@@ -449,7 +478,9 @@ source: tests/sentry/backup/test_sanitize.py
 - model_name: sentry.rule
   ordinal: 1
   sanitized_fields:
+  - data
   - date_added
+  - label
 - model_name: sentry.querysubscription
   ordinal: 1
   sanitized_fields:
@@ -497,6 +528,7 @@ source: tests/sentry/backup/test_sanitize.py
   ordinal: 1
   sanitized_fields:
   - date_added
+  - title
 - model_name: sentry.customdynamicsamplingruleproject
   ordinal: 1
   sanitized_fields: []
@@ -596,20 +628,24 @@ source: tests/sentry/backup/test_sanitize.py
   - date_added
   - date_detected
   - date_started
+  - title
 - model_name: sentry.dashboardwidgetquery
   ordinal: 1
   sanitized_fields:
   - date_added
   - date_modified
+  - fields
   - name
 - model_name: sentry.alertruletrigger
   ordinal: 1
   sanitized_fields:
   - date_added
+  - label
 - model_name: sentry.alertruletrigger
   ordinal: 2
   sanitized_fields:
   - date_added
+  - label
 - model_name: sentry.alertruleprojects
   ordinal: 1
   sanitized_fields:
@@ -642,6 +678,7 @@ source: tests/sentry/backup/test_sanitize.py
   ordinal: 1
   sanitized_fields:
   - date_added
+  - label
 - model_name: sentry.timeseriessnapshot
   ordinal: 1
   sanitized_fields:
@@ -684,6 +721,7 @@ source: tests/sentry/backup/test_sanitize.py
 - model_name: sentry.incidentactivity
   ordinal: 1
   sanitized_fields:
+  - comment
   - date_added
 - model_name: sentry.dashboardwidgetqueryondemand
   ordinal: 1

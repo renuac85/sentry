@@ -5,6 +5,8 @@ from typing import Any, ClassVar, Self
 from django.db import models
 from django.utils import timezone
 
+from sentry.backup.dependencies import NormalizedModelName, get_model_name
+from sentry.backup.sanitize import SanitizableField, Sanitizer
 from sentry.backup.scopes import RelocationScope
 from sentry.constants import ObjectStatus
 from sentry.db.models import (
@@ -18,6 +20,7 @@ from sentry.db.models import (
 from sentry.db.models.fields.hybrid_cloud_foreign_key import HybridCloudForeignKey
 from sentry.db.models.manager import BaseManager
 from sentry.utils.cache import cache
+from sentry.utils.json import JSONData
 
 
 class RuleSource(IntEnum):
@@ -125,6 +128,16 @@ class Rule(Model):
                 return action
 
         return None
+
+    @classmethod
+    def sanitize_relocation_json(
+        cls, json: JSONData, sanitizer: Sanitizer, model_name: NormalizedModelName | None = None
+    ) -> None:
+        model_name = get_model_name(cls) if model_name is None else model_name
+        sanitizer.set_string(json, SanitizableField(model_name, "label"))
+
+        json["fields"]["data"] = "{}"
+        return super().sanitize_relocation_json(json, sanitizer, model_name)
 
 
 class RuleActivityType(Enum):

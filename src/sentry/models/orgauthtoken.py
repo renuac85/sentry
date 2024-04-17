@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import secrets
 from typing import ClassVar, Self
 
 from django.core.exceptions import ValidationError
@@ -7,8 +9,9 @@ from django.db import models
 from django.utils import timezone
 from django.utils.encoding import force_str
 
-from sentry.backup.dependencies import PrimaryKeyMap, get_model_name
+from sentry.backup.dependencies import NormalizedModelName, PrimaryKeyMap, get_model_name
 from sentry.backup.helpers import ImportFlags
+from sentry.backup.sanitize import SanitizableField, Sanitizer
 from sentry.backup.scopes import ImportScope, RelocationScope
 from sentry.conf.server import SENTRY_SCOPES
 from sentry.db.models import (
@@ -23,6 +26,7 @@ from sentry.db.models.outboxes import ReplicatedControlModel
 from sentry.models.organization import Organization
 from sentry.models.outbox import OutboxCategory
 from sentry.services.hybrid_cloud.orgauthtoken import orgauthtoken_service
+from sentry.utils.json import JSONData
 
 MAX_NAME_LENGTH = 255
 
@@ -126,6 +130,23 @@ class OrgAuthToken(ReplicatedControlModel):
             token=serialize_org_auth_token(self),
             region_name=region_name,
         )
+
+    @classmethod
+    def sanitize_relocation_json(
+        cls, json: JSONData, sanitizer: Sanitizer, model_name: NormalizedModelName | None = None
+    ) -> None:
+        model_name = get_model_name(cls) if model_name is None else model_name
+        token = secrets.token_hex(nbytes=32)
+        token_last_characters = token[-4:]
+        hashed_token = hashlib.sha256(token.encode()).hexdigest()
+
+        sanitizer.set_string(json, SanitizableField(model_name, "token"), lambda _: hashed_token)
+        sanitizer.set_string(
+            json,
+            SanitizableField(model_name, "token_last_characters"),
+            lambda _: token_last_characters,
+        )
+        return super().sanitize_relocation_json(json, sanitizer, model_name)
 
 
 def is_org_auth_token_auth(auth: object) -> bool:
