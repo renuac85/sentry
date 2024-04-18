@@ -104,7 +104,7 @@
     "compression-webpack-plugin": "11.1.0",
     "copy-webpack-plugin": "^12.0.2",
     "core-js": "^3.33.0",
-    "cronstrue": "^2.26.0",
+    "cronstrue": "^2.49.0",
     "css-loader": "^6.10.0",
     "css-minimizer-webpack-plugin": "^6.0.0",
     "diff": "5.1.0",
