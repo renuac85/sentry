@@ -132,6 +132,7 @@ def build_sdk_crash_detection_configs() -> Sequence[SDKCrashDetectionConfig]:
                     r"**/@sentry/cli/**",
                     r"**/@sentry/core/**",
                     r"**/@sentry/hub/**",
+                    r"**/@sentry/integrations/**",
                     r"**/@sentry/react/**",
                     r"**/@sentry/types/**",
                     r"**/@sentry/utils/**",
