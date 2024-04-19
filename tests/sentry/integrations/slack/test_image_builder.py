@@ -1,12 +1,16 @@
-from datetime import timedelta
 import uuid
+from datetime import timedelta
 
 from django.utils import timezone
 
 from sentry.integrations.slack.message_builder.image_block_builder import ImageBlockBuilder
 from sentry.issues.grouptype import PerformanceP95EndpointRegressionGroupType
 from sentry.models.group import Group
-from sentry.testutils.cases import MetricsEnhancedPerformanceTestCase, PerformanceIssueTestCase, TestCase
+from sentry.testutils.cases import (
+    MetricsEnhancedPerformanceTestCase,
+    PerformanceIssueTestCase,
+    TestCase,
+)
 from sentry.testutils.helpers.datetime import before_now
 from sentry.testutils.helpers.features import with_feature
 from sentry.utils.samples import load_data
@@ -35,7 +39,7 @@ class TestSlackImageBlockBuilder(MetricsEnhancedPerformanceTestCase, OccurrenceT
             },
             evidence_data={
                 "breakpoint": before_now(minutes=1).timestamp(),
-            }
+            },
         )
         group = Group.objects.first()
         group.update(type=PerformanceP95EndpointRegressionGroupType.type_id)

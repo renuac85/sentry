@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Mapping, Sequence
-
 from typing import Any
 
 from sentry_relay.processing import parse_release

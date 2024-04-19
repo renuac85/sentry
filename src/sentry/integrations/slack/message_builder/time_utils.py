@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
+
 from django.utils import timezone
 from django.utils.timesince import timesince
-from sentry.models.group import Group
 from django.utils.translation import gettext as _
+
+from sentry.models.group import Group
 
 
 def get_approx_start_time(group: Group):
