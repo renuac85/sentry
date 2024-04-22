@@ -210,7 +210,7 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
         """
         raise NotImplementedError
 
-    def get_option_override(self, duration: timedelta):
+    def get_option_override(self, duration: timedelta) -> contextlib.AbstractContextManager[object]:
         # For conditions with interval >= 1 hour we don't need to worry about read your writes
         # consistency. Disable it so that we can scale to more nodes.
         option_override_cm: contextlib.AbstractContextManager[object] = contextlib.nullcontext()
@@ -218,12 +218,14 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
             option_override_cm = options_override({"consistent": False})
         return option_override_cm
 
-    def get_start_end_from_duration(self, duration: timedelta):
+    def get_start_end_from_duration(self, duration: timedelta) -> tuple[datetime, datetime]:
         end = timezone.now()
         start = end - duration
         return (start, end)
 
-    def get_comparison_start_end(self, interval: timedelta, duration: timedelta):
+    def get_comparison_start_end(
+        self, interval: timedelta, duration: timedelta
+    ) -> tuple[datetime, datetime]:
         end = timezone.now() - interval
         start = end - duration
         return (start, end)
