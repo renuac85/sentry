@@ -147,7 +147,7 @@ SECURITY_REPORT_INTERFACES = ("csp", "hpkp", "expectct", "expectstaple", "nel")
 # Timeout for cached group crash report counts
 CRASH_REPORT_TIMEOUT = 24 * 3600  # one day
 
-PLACEHOLDER_EVENT_TITLES = set(["<untitled>", "<unknown>", "<unlabeled event>", "Error"])
+PLACEHOLDER_EVENT_TITLES = {"<untitled>", "<unknown>", "<unlabeled event>", "Error"}
 
 HIGH_SEVERITY_THRESHOLD = 0.1
 
