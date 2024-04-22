@@ -141,7 +141,10 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
 
         comparison_type = self.get_option("comparisonType", ComparisonType.COUNT)
         comparison_interval = COMPARISON_INTERVALS[self.get_option("comparisonInterval")][1]
-        current_value = self.get_rate(interval, self.rule.environment_id, comparison_type, comparison_interval, event)  # type: ignore[arg-type, union-attr]
+        if not event:
+            return False
+
+        current_value = self.get_rate(interval, event, self.rule.environment_id, comparison_type, comparison_interval)  # type: ignore[arg-type, union-attr]
 
         logging.info("event_frequency_rule current: %s, threshold: %s", current_value, value)
         return current_value > value
@@ -213,12 +216,11 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
     def get_rate(
         self,
         interval: str,
+        event: GroupEvent,
         environment_id: int,
         comparison_type: str,
         comparison_interval: timedelta | None = None,
-        event: GroupEvent | None = None,
-        group_ids: set[int] | None = None,
-    ) -> int | dict[int, int]:
+    ) -> int:
         _, duration = self.intervals[interval]
         end = timezone.now()
         # For conditions with interval >= 1 hour we don't need to worry about read your writes
@@ -228,55 +230,59 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
             option_override_cm = options_override({"consistent": False})
         with option_override_cm:
             start = end - duration
-            if event:
-                result = self.get_rate_single(event, start, end, environment_id)
-            elif group_ids:
-                result = self.get_rate_bulk(group_ids, start, end, environment_id)
+            result = self.query(event, start, end, environment_id=environment_id)
             if comparison_type == ComparisonType.PERCENT:
                 comparison_end = end - comparison_interval
+                start = comparison_end - duration
                 # TODO: Figure out if there's a way we can do this less frequently. All queries are
                 # automatically cached for 10s. We could consider trying to cache this and the main
                 # query for 20s to reduce the load.
-                start = comparison_end - duration
-                comparison_end = end - comparison_interval
-                if event:
-                    comparison_result = self.get_rate_single(
-                        event, start, comparison_end, environment_id
-                    )
-                    result = percent_increase(result, comparison_result)
-                elif group_ids:
-                    comparison_result = self.get_rate_bulk(
-                        group_ids, start, comparison_end, environment_id
-                    )
-                    result = {
-                        group_id: percent_increase(result[group_id], comparison_result[group_id])
-                        for group_id in group_ids
-                    }
+                comparison_result = self.query(event, start, end, environment_id=environment_id)
+                result = percent_increase(result, comparison_result)
 
         return result
 
-    def get_rate_single(
-        self,
-        event: GroupEvent,
-        start: datetime,
-        end: datetime,
-        environment_id: int,
-    ) -> int:
-        return self.query(event, start, end, environment_id=environment_id)
-
     def get_rate_bulk(
         self,
+        interval: str,
         group_ids: set[int],
-        start: datetime,
-        end: datetime,
         environment_id: int,
-    ) -> int:
-        return self.batch_query(
-            group_ids=group_ids,
-            start=start,
-            end=end,
-            environment_id=environment_id,
-        )
+        comparison_type: str,
+        comparison_interval: timedelta | None = None,
+    ) -> dict[int, int]:
+        _, duration = self.intervals[interval]
+        end = timezone.now()
+        # For conditions with interval >= 1 hour we don't need to worry about read your writes
+        # consistency. Disable it so that we can scale to more nodes.
+        option_override_cm: contextlib.AbstractContextManager[object] = contextlib.nullcontext()
+        if duration >= timedelta(hours=1):
+            option_override_cm = options_override({"consistent": False})
+        with option_override_cm:
+            start = end - duration
+            result = self.batch_query(
+                group_ids=group_ids,
+                start=start,
+                end=end,
+                environment_id=environment_id,
+            )
+            if comparison_type == ComparisonType.PERCENT:
+                comparison_end = end - comparison_interval
+                start = comparison_end - duration
+                # TODO: Figure out if there's a way we can do this less frequently. All queries are
+                # automatically cached for 10s. We could consider trying to cache this and the main
+                # query for 20s to reduce the load.
+                comparison_result = self.batch_query(
+                    group_ids=group_ids,
+                    start=start,
+                    end=end,
+                    environment_id=environment_id,
+                )
+                result = {
+                    group_id: percent_increase(result[group_id], comparison_result[group_id])
+                    for group_id in group_ids
+                }
+
+        return result
 
     def get_snuba_query_result(
         self,
