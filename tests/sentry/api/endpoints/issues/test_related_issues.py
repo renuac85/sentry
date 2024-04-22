@@ -1,5 +1,6 @@
 from django.urls import reverse
 
+from sentry.models.group import Group
 from sentry.testutils.cases import APITestCase, SnubaTestCase, TraceTestCase
 
 
@@ -52,8 +53,8 @@ class RelatedIssuesTest(APITestCase, SnubaTestCase, TraceTestCase):
     def test_trace_connected_errors(self) -> None:
         error, _ = self.load_errors()
         assert error is not None and error.group_id is not None
-        # XXX: Fix the typing of the code that saves events
-        self.group_id = int(error.group_id)
+        group: Group = error.group
+        self.group_id = group.id
 
         response = self.get_success_response()
         assert response.json() == {
