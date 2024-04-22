@@ -142,11 +142,7 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
         comparison_type = self.get_option("comparisonType", ComparisonType.COUNT)
         comparison_interval = COMPARISON_INTERVALS[self.get_option("comparisonInterval")][1]
         _, duration = self.intervals[interval]
-        current_value = self.get_rate(duration, event, self.rule.environment_id)  # type: ignore[arg-type, union-attr]
-        if comparison_type == ComparisonType.PERCENT:
-            current_value = self.get_rate_percent(
-                duration, event, self.rule.environment_id, comparison_interval, current_value
-            )
+        current_value = self.get_rate(duration, comparison_interval, event, self.rule.environment_id, comparison_type)  # type: ignore[arg-type, union-attr]
         logging.info("event_frequency_rule current: %s, threshold: %s", current_value, value)
         return current_value > value
 
@@ -245,34 +241,49 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
             for group_id in group_ids
         }
 
+    def get_start_end_from_duration(self, duration):
+        end = timezone.now()
+        start = end - duration
+        return (start, end)
+
     def get_rate(
         self,
         duration: int,
+        interval: int,
         event: GroupEvent,
         environment_id: int,
+        comparison_type: str,
     ) -> int:
-        end = timezone.now()
+        start, end = self.get_start_end_from_duration(duration)
         option_override_cm = self.get_option_override(duration)
         with option_override_cm:
-            start = end - duration
-            return self.query(event, start, end, environment_id=environment_id)
+            result = self.query(event, start, end, environment_id=environment_id)
+        if comparison_type == ComparisonType.PERCENT:
+            result = self.get_rate_percent(duration, event, environment_id, interval, result)
+        return result
 
     def get_rate_bulk(
         self,
         duration: int,
+        interval: int,
         group_ids: set[int],
         environment_id: int,
+        comparison_type: str,
     ) -> dict[int, int]:
-        end = timezone.now()
+        start, end = self.get_start_end_from_duration(duration)
         option_override_cm = self.get_option_override(duration)
         with option_override_cm:
-            start = end - duration
-            return self.batch_query(
+            result = self.batch_query(
                 group_ids=group_ids,
                 start=start,
                 end=end,
                 environment_id=environment_id,
             )
+        if comparison_type == ComparisonType.PERCENT:
+            result = self.get_rate_percent_bulk(
+                duration, group_ids, environment_id, interval, result
+            )
+        return result
 
     def get_snuba_query_result(
         self,
