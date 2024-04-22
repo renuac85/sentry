@@ -210,7 +210,7 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
         """
         raise NotImplementedError
 
-    def get_option_override(self, duration: int):
+    def get_option_override(self, duration: timedelta):
         # For conditions with interval >= 1 hour we don't need to worry about read your writes
         # consistency. Disable it so that we can scale to more nodes.
         option_override_cm: contextlib.AbstractContextManager[object] = contextlib.nullcontext()
@@ -218,20 +218,20 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
             option_override_cm = options_override({"consistent": False})
         return option_override_cm
 
-    def get_start_end_from_duration(self, duration: int):
+    def get_start_end_from_duration(self, duration: timedelta):
         end = timezone.now()
         start = end - duration
         return (start, end)
 
-    def get_comparison_start_end(self, interval: int, duration: int):
+    def get_comparison_start_end(self, interval: timedelta, duration: timedelta):
         end = timezone.now() - interval
         start = end - duration
         return (start, end)
 
     def get_rate(
         self,
-        duration: int,
-        interval: int,
+        duration: timedelta,
+        interval: timedelta,
         event: GroupEvent,
         environment_id: int,
         comparison_type: str,
@@ -253,8 +253,8 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
 
     def get_rate_bulk(
         self,
-        duration: int,
-        interval: int,
+        duration: timedelta,
+        interval: timedelta,
         group_ids: set[int],
         environment_id: int,
         comparison_type: str,
