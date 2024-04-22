@@ -2207,6 +2207,11 @@ def _process_existing_aggregate(
     # Grab a reference to this before it gets clobbered when we update `existing_data`
     existing_metadata = group.data.get("metadata", {})
 
+    # Keep existing title if incoming title is a placeholder (`<unlabeled event`, `<untitled>`,
+    # etc.) and existing one isn't. See `_get_updated_group_title` docstring.
+    incoming_data["title"] = _get_updated_group_title(existing_data, incoming_data)
+    incoming_metadata["title"] = _get_updated_group_title(existing_metadata, incoming_metadata)
+
     existing_data.update(incoming_data)
     existing_metadata.update(incoming_metadata)
 
