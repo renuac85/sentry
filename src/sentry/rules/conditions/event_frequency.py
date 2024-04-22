@@ -142,7 +142,7 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
         comparison_type = self.get_option("comparisonType", ComparisonType.COUNT)
         comparison_interval = COMPARISON_INTERVALS[self.get_option("comparisonInterval")][1]
         _, duration = self.intervals[interval]
-        current_value = self.get_rate(interval, duration, event, self.rule.environment_id, comparison_type, comparison_interval)  # type: ignore[arg-type, union-attr]
+        current_value = self.get_rate(duration, event, self.rule.environment_id)  # type: ignore[arg-type, union-attr]
         if comparison_type == ComparisonType.PERCENT:
             current_value = self.get_rate_percent(
                 duration, event, self.rule.environment_id, comparison_interval, current_value
@@ -247,12 +247,9 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
 
     def get_rate(
         self,
-        interval: str,
         duration: int,
         event: GroupEvent,
         environment_id: int,
-        comparison_type: str,
-        comparison_interval: timedelta | None = None,
     ) -> int:
         end = timezone.now()
         option_override_cm = self.get_option_override(duration)
@@ -262,12 +259,9 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
 
     def get_rate_bulk(
         self,
-        interval: str,
         duration: int,
         group_ids: set[int],
         environment_id: int,
-        comparison_type: str,
-        comparison_interval: timedelta | None = None,
     ) -> dict[int, int]:
         end = timezone.now()
         option_override_cm = self.get_option_override(duration)
