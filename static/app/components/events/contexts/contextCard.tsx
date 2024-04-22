@@ -11,8 +11,7 @@ import {AnnotatedTextErrors} from 'sentry/components/events/meta/annotatedText/a
 import Panel from 'sentry/components/panels/panel';
 import {StructuredData} from 'sentry/components/structuredEventData';
 import {space} from 'sentry/styles/space';
-import type {Group, KeyValueListDataItem, Project, Event} from 'sentry/types';
-
+import type {Event,Group, KeyValueListDataItem, Project} from 'sentry/types';
 import {defined, objectIsEmpty} from 'sentry/utils';
 import useOrganization from 'sentry/utils/useOrganization';
 
