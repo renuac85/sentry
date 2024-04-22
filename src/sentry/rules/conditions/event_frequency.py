@@ -218,31 +218,13 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
             option_override_cm = options_override({"consistent": False})
         return option_override_cm
 
-    def get_rate_percent(self, duration, event, environment_id, interval, result):
-        comparison_end = timezone.now() - interval
-        start = comparison_end - duration
-        # TODO: Figure out if there's a way we can do this less frequently. All queries are
-        # automatically cached for 10s. We could consider trying to cache this and the main
-        # query for 20s to reduce the load.
-        comparison_result = self.query(event, start, comparison_end, environment_id=environment_id)
-        return percent_increase(result, comparison_result)
-
-    def get_rate_percent_bulk(self, duration, group_ids, environment_id, interval, result):
-        comparison_end = timezone.now() - interval
-        start = comparison_end - duration
-        comparison_result = self.batch_query(
-            group_ids=group_ids,
-            start=start,
-            end=comparison_end,
-            environment_id=environment_id,
-        )
-        return {
-            group_id: percent_increase(result[group_id], comparison_result[group_id])
-            for group_id in group_ids
-        }
-
-    def get_start_end_from_duration(self, duration):
+    def get_start_end_from_duration(self, duration: int):
         end = timezone.now()
+        start = end - duration
+        return (start, end)
+
+    def get_comparison_start_end(self, interval: int, duration: int):
+        end = timezone.now() - interval
         start = end - duration
         return (start, end)
 
@@ -259,7 +241,14 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
         with option_override_cm:
             result = self.query(event, start, end, environment_id=environment_id)
         if comparison_type == ComparisonType.PERCENT:
-            result = self.get_rate_percent(duration, event, environment_id, interval, result)
+            # TODO: Figure out if there's a way we can do this less frequently. All queries are
+            # automatically cached for 10s. We could consider trying to cache this and the main
+            # query for 20s to reduce the load.
+            start, comparison_end = self.get_comparison_start_end(interval, duration)
+            comparison_result = self.query(
+                event, start, comparison_end, environment_id=environment_id
+            )
+            result = percent_increase(result, comparison_result)
         return result
 
     def get_rate_bulk(
@@ -280,9 +269,17 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
                 environment_id=environment_id,
             )
         if comparison_type == ComparisonType.PERCENT:
-            result = self.get_rate_percent_bulk(
-                duration, group_ids, environment_id, interval, result
+            start, comparison_end = self.get_comparison_start_end(interval, duration)
+            comparison_result = self.batch_query(
+                group_ids=group_ids,
+                start=start,
+                end=comparison_end,
+                environment_id=environment_id,
             )
+            result = {
+                group_id: percent_increase(result[group_id], comparison_result[group_id])
+                for group_id in group_ids
+            }
         return result
 
     def get_snuba_query_result(
