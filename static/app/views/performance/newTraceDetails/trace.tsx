@@ -1807,7 +1807,7 @@ const TraceStylingWrapper = styled('div')`
     .TraceIcon {
       position: absolute;
       top: 50%;
-      transform: translate(-50%, -50%) scaleX(var(--inverse-span-scale));
+      transform: translate(-50%, -50%) scaleX(var(--inverse-span-scale)) translateZ(0);
       background-color: ${p => p.theme.background};
       width: 18px !important;
       height: 18px !important;
@@ -1868,22 +1868,23 @@ const TraceStylingWrapper = styled('div')`
     }
 
     .TracePattern {
-      width: 9999999%;
+      width: 1000000px;
       height: 100%;
       position: absolute;
       transform-origin: left center;
-      transform: scaleX(var(--inverse-span-scale));
+      transform: scaleX(var(--inverse-span-scale)) translateZ(0);
       background-image: linear-gradient(
         135deg,
-        var(--pattern-odd) 25%,
-        var(--pattern-even) 25%,
-        var(--pattern-even) 50%,
-        var(--pattern-odd) 50%,
-        var(--pattern-odd) 75%,
-        var(--pattern-even) 75%,
-        var(--pattern-even) 100%
+        #ffffff calc(25% + 1px),
+        #5f5370 calc(25% + 1px),
+        #5f5370 calc(50% + 1px),
+        #ffffff calc(50% + 1px),
+        #ffffff calc(75% + 1px),
+        #5f5370 calc(75% + 1px),
+        #5f5370 calc(100% + 1px)
       );
-      background-size: 9px 9px;
+
+      background-size: 16px 16px;
 
       &.performance_issue {
         --pattern-odd: ${p => p.theme.surface400};

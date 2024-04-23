@@ -1300,7 +1300,10 @@ export class VirtualizedViewManager {
 
     const span_transform = this.computeSpanCSSMatrixTransform(span_bar?.space);
     span_bar.ref.style.transform = `matrix(${span_transform.join(',')}`;
-    span_bar.ref.style.setProperty('--inverse-span-scale', 1 / span_transform[0] + '');
+    span_bar.ref.style.setProperty(
+      '--inverse-span-scale',
+      1 / (Math.round(span_transform[0] * 1e4) / 1e4) + ''
+    );
   }
 
   drawSpanText(span_text: this['span_text'][0], node: TraceTreeNode<any> | undefined) {
