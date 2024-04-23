@@ -140,7 +140,8 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
             return False
 
         comparison_type = self.get_option("comparisonType", ComparisonType.COUNT)
-        comparison_interval = COMPARISON_INTERVALS[self.get_option("comparisonInterval")][1]
+        comparison_interval_option = self.get_option("comparisonInterval", "5m")
+        comparison_interval = COMPARISON_INTERVALS[comparison_interval_option][1]
         _, duration = self.intervals[interval]
         current_value = self.get_rate(duration, comparison_interval, event, self.rule.environment_id, comparison_type)  # type: ignore[arg-type, union-attr]
         logging.info("event_frequency_rule current: %s, threshold: %s", current_value, value)
@@ -218,11 +219,6 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
             option_override_cm = options_override({"consistent": False})
         return option_override_cm
 
-    def get_start_end_from_duration(self, duration: timedelta) -> tuple[datetime, datetime]:
-        end = timezone.now()
-        start = end - duration
-        return (start, end)
-
     def get_comparison_start_end(
         self, interval: timedelta, duration: timedelta
     ) -> tuple[datetime, datetime]:
@@ -238,7 +234,7 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
         environment_id: int,
         comparison_type: str,
     ) -> int:
-        start, end = self.get_start_end_from_duration(duration)
+        start, end = self.get_comparison_start_end(timedelta(), duration)
         option_override_cm = self.get_option_override(duration)
         with option_override_cm:
             result = self.query(event, start, end, environment_id=environment_id)
@@ -261,7 +257,7 @@ class BaseEventFrequencyCondition(EventCondition, abc.ABC):
         environment_id: int,
         comparison_type: str,
     ) -> dict[int, int]:
-        start, end = self.get_start_end_from_duration(duration)
+        start, end = self.get_comparison_start_end(timedelta(), duration)
         option_override_cm = self.get_option_override(duration)
         with option_override_cm:
             result = self.batch_query(
